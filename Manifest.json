@@ -1,0 +1,9 @@
+{
+  "name": "World Clock",
+  "version": "1.0",
+  "description": "World Clock showing Time of 12 countries",
+  "browser_action": {
+    "default_icon": "clock.ico",
+    "popup": "clock.html"
+  }
+}
