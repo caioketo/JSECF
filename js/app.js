@@ -1,15 +1,15 @@
 var ecf;
 
 document.addEventListener('DOMContentLoaded', function () {
+    port = "COM6";
+    ecf = new ECF();
     bind();
-    port = '';
 });
 
 function bind() {
-    document.getElementById('LeituraX').addEventListener('click', ecf.leituraX);
+    document.getElementById('LeituraX').addEventListener('click', leituraX);
     document.getElementById('AbreCupom').addEventListener('click', abreCupom);
-    port = "COM6";
-    ecf = new ECF();
+    document.getElementById('CancelaCupom').addEventListener('click', cancelaCupom);
 }
 
 function write() {
@@ -27,9 +27,19 @@ function abreCupom() {
     ecf.abreCupom(cpf, nome, endereco);
 }
 
+function cancelaCupom() {
+    ecf.cancelaCupom();
+}
+
+function leituraX() {
+    ecf.leituraX();
+}
+
 
 function ECF() {
     this.connectionId = 0;
+    this.dataRead = '';
+
     var onOpen = function (connectionInfo) {
         ecf.connectionId = connectionInfo.connectionId;
         ecf.comutaOnline();
@@ -49,6 +59,27 @@ function ECF() {
         }
         cmd = this.prepareCmd(cmd);
         chrome.serial.write(ecf.connectionId, cmd, onWrite);
+    }
+
+    this.onCharRead = function (readInfo) {
+        if (!connectionInfo) {
+            return;
+        }
+        if (readInfo && readInfo.bytesRead > 0 && readInfo.data) {
+            var str = ab2str(readInfo.data);
+            if (str[readInfo.bytesRead - 1] === '\n') {
+                this.dataRead += str.substring(0, readInfo.bytesRead - 1);
+                onLineRead(this.dataRead);
+                this.dataRead = "";
+            } else {
+                this.dataRead += str;
+            }
+        }
+        chrome.serial.read(connectionId, 128, onCharRead);
+    }
+
+    this.read = function () {
+        chrome.serial.read(connectionId, 128, this.onCharRead);
     }
 
     this.prepareCmd = function (cmd) {
@@ -85,6 +116,12 @@ function ECF() {
         }
     }
 
+    this.addField = function (bufView, field, index) {
+        for (var i = 0; i < field.length; i++) {
+            bufView[i + index] = field.charCodeAt(i);
+        }
+    }
+
     //Funções ECF
     this.comutaOnline = function () {
         var buf = new ArrayBuffer(2);
@@ -101,7 +138,7 @@ function ECF() {
         bufView[1] = 'F'.charCodeAt(0);
         bufView[2] = 235;
         bufView[3] = '0'.charCodeAt(0);
-        ecf.write(bufView);
+        this.write(bufView);
     }
 
     this.abreCupom = function (cpf, nome, endereco) {
@@ -110,25 +147,53 @@ function ECF() {
         bufView[0] = 28;
         bufView[1] = 'F'.charCodeAt(0);
         bufView[2] = 200;
-        for (var i = 0; i < cpf.length; i++) {
-            bufView[i + 3] = cpf.charCodeAt(i);
-        }
+        this.addField(bufView, cpf, 3);
         bufView[3 + cpf.length] = 255;
-        for (var i = 0; i < nome.length; i++) {
-            bufView[i + 4 + cpf.length] = nome.charCodeAt(i);
-        }
+        this.addField(bufView, nome, 4 + cpf.length);
         bufView[4 + cpf.length + nome.length] = 255;
-        for (var i = 0; i < endereco.length; i++) {
-            bufView[i + 5 + cpf.length + nome.length] = endereco.charCodeAt(i);
-        }
+        this.addField(bufView, endereco, 5 + cpf.length + nome.length);
         bufView[5 + cpf.length + nome.length + endereco.length] = 255;
 
-        ecf.write(bufView);
+        this.write(bufView);
     }
 
-    this.vendeItem = function (aliquota, qtd, valor, desc, codigo, un, desc) {
-        //FS + 'F' + #207 + AliquotaECF + QtdStr + ValorStr +
-            //DescontoStr + FlagDesc + Codigo + Unidade + ModoCalculo + Descricao
+    this.vendeItem = function (aliquota, qtd, valor, desc, flagDesc, codigo, un, desc) {
+        var buf = new ArrayBuffer(4 + aliquota.length + qtd.length + valor.length + desc.length + flagDesc.length + codigo.length +
+            un.length + desc.length);
+        var bufView = new Uint8Array(buf);
+        bufView[0] = 28;
+        bufView[1] = 'F'.charCodeAt(0);
+        bufView[2] = 207;
+        var index = 3;
+        this.addField(bufView, aliquota, index);
+        index += aliquota.length;
+        this.addField(bufView, qtd, index);
+        index += qtd.length;
+        this.addField(bufView, valor, index);
+        index += valor.length;
+        this.addField(bufView, desc, index);
+        index += desc.length;
+        this.addField(bufView, flagDesc, index);
+        index += flagDesc.length;
+        this.addField(bufView, codigo, index);
+        index += codigo.length;
+        this.addField(bufView, un, index);
+        index += un.length;
+        this.addField(bufView, 'A', index);
+        index += 1;
+        this.addField(bufView, desc, index);
+
+        this.write(bufView);
+    }
+
+    this.cancelaCupom = function () {
+        var buf = new ArrayBuffer(3);
+        var bufView = new Uint8Array(buf);
+        bufView[0] = 28;
+        bufView[1] = 'F'.charCodeAt(0);
+        bufView[2] = 211;
+        
+        this.write(bufView);
     }
 }
 
@@ -140,3 +205,7 @@ var str2ab = function (str) {
     }
     return buf;
 }
+
+var ab2str = function (buf) {
+    return String.fromCharCode.apply(null, new Uint8Array(buf));
+};
