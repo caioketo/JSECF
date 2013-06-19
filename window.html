@@ -1,22 +1,64 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="utf-8" />
+<!--<meta charset="utf-8" /> -->
 <title>JS ECF</title>
 <link rel="stylesheet" media="all" href="bootstrap/css/bootstrap.css">
 <link rel="stylesheet" media="all" href="css/main.css">
 <base target="_blank">
 <script src="js/util.js"></script>
 <script src="js/app.js"></script>
+<!-- add the jQuery script -->
+<script type="text/javascript" src="js/jquery-1.9.1.min.js"></script>	
+<!-- add the jQWidgets framework -->
+<script type="text/javascript" src="js/jqwidgets/jqxcore.js"></script>
+<!-- add one or more widgets -->
+<script type="text/javascript" src="js/jqwidgets/jqxbuttons.js"></script>
+<script type="text/javascript" src="js/jqwidgets/jqxscrollbar.js"></script>
+<script type="text/javascript" src="js/jqwidgets/jqxlistbox.js"></script>
+<script type="text/javascript" src="js/jqwidgets/scripts/gettheme.js"></script>
+<script type="text/javascript" src="js/jqwidgets/jqxcore.js"></script>
+<script type="text/javascript" src="js/jqwidgets/jqxdata.js"></script> 
+<script type="text/javascript" src="js/jqwidgets/jqxbuttons.js"></script>
+<script type="text/javascript" src="js/jqwidgets/jqxscrollbar.js"></script>
+<script type="text/javascript" src="js/jqwidgets/jqxmenu.js"></script>
+<script type="text/javascript" src="js/jqwidgets/jqxcheckbox.js"></script>
+<script type="text/javascript" src="js/jqwidgets/jqxlistbox.js"></script>
+<script type="text/javascript" src="js/jqwidgets/jqxdropdownlist.js"></script>
+<script type="text/javascript" src="js/jqwidgets/jqxgrid.js"></script>
+<script type="text/javascript" src="js/jqwidgets/jqxgrid.selection.js"></script> 
+<script type="text/javascript" src="js/jqwidgets/jqxcore.js"></script>
+<script type="text/javascript" src="js/jqwidgets/jqxmenu.js"></script>
+<!-- add one of the jQWidgets styles -->
+<link rel="stylesheet" href="js/jqwidgets/styles/jqx.base.css" type="text/css" />
 </head>
 <body>
 
-<section id="main">
+<section id="main" style="width: 100%; height: 100%;">
+    <div id='jqxWidget' style="width: 100%;">
+        <div id='jqxMenu' style='visibility: hidden; margin-left: 5px; width:100%;'>
+            <ul>
+                <li>Vendas
+                    <ul style="height: 60px;">
+                        <li id="AbrirVenda">Abrir Venda</li>
+                        <li id="ConsultarVendas">Consultar Vendas</li>
+                    </ul>
+                </li>
+                <li>Produtos
+                    <ul style="height: 30px;">
+                        <li id="ConsultarProdutos">Consultar Produtos</li>
+                    </ul>
+                </li>
+                <li id="Sair">Sair</li>
+            </ul>
+        </div>
+    </div>
     <button id="LeituraX" class="btn">Leitura X</button>
     <button id="AbreCupom" class="btn">Abre Cupom</button>
     <button id="CancelaCupom" class="btn">Cancela Cupom</button>
-    <button id="Push" class="btn">Push Data</button>
-    <button id="TestWindow" class="btn">Test Window</button>
+    <img src="images/refresh.png" id="Push" width="50" height="50" style="cursor: pointer;"/>
+    <img src="images/shopping_cart.png" id="Venda" width="50" height="50" style="cursor: pointer;"/>
+    <div id="jqxgrid"></div>
 </section>
 </body>
 </html>

@@ -12,20 +12,47 @@ function bind() {
     document.getElementById('LeituraX').addEventListener('click', leituraX);
     document.getElementById('AbreCupom').addEventListener('click', abreCupom);
     document.getElementById('CancelaCupom').addEventListener('click', cancelaCupom);
-    document.getElementById('Push').addEventListener('click', pushData);
-    document.getElementById('TestWindow').addEventListener('click', testWindow);
-    
-    document.addEventListener("keydown", keyDown, false);
+    document.getElementById('Push').addEventListener('click', pushData);    
+    document.addEventListener('keydown', keyDown, false);
+    ativaMenu();
+    document.getElementById('Sair').addEventListener('click', sair);
 }
 
-function testWindow() {
-    chrome.app.window.create('window.html', {
-        bounds: {
-            width: 500,
-            height: 600
-        },
-        minWidth: 500,
-        minHeight: 600
+function sair() {
+    window.close();
+}
+
+function ativaMenu() {
+    var theme = getDemoTheme();
+    // Create a jqxMenu
+    $("#jqxMenu").jqxMenu({ width: '600', height: '30px', theme: theme });
+    $("#jqxMenu").css('visibility', 'visible');
+    $("#jqxMenu").jqxMenu({ showTopLevelArrows: true });
+}
+
+function prepareGrid(data) {
+    var theme = getDemoTheme();
+    var source =
+    {
+        localdata: data,
+        datatype: "local",
+        datafields:
+        [
+            { name: 'Id', type: 'number' },
+            { name: 'Desc', type: 'string' }
+        ]
+    };
+    var dataAdapter = new $.jqx.dataAdapter(source);
+    $("#jqxgrid").jqxGrid(
+    {
+        width: 500,
+        height: 350,
+        source: dataAdapter,
+        theme: theme,
+        columns: [
+            { text: 'Id', datafield: 'Id', width: 100 },
+            { text: 'Descricao', datafield: 'Desc', width: 100 }
+        ]
     });
 }
 
@@ -63,30 +90,30 @@ function selected() {
 function pushData() {
     request('GET', 'http://localhost:28166/Produtos/JSON', function (lastResponse, xhr) {
         var resp = JSON.parse(lastResponse);
-
-        if (document.getElementById('data') != null) {
-            document.getElementById('main').removeChild(document.getElementById('data'));
-        }
+        prepareGrid(resp);
+        //if (document.getElementById('data') != null) {
+            //document.getElementById('main').removeChild(document.getElementById('data'));
+        //}
         
-        var frag = document.createElement('section');
-        frag.id = 'data';
-        var table = document.createElement('table');
-        table.border = 1;
-        for (var i = 0, entry; entry = resp[i]; ++i) {
-            var tr = document.createElement('tr');
-            var keys = Object.keys(entry);
-            for (var j = 0, key; key = keys[j]; ++j) {
-                var td = document.createElement('td');
-                td.innerText = entry[key];
-                tr.appendChild(td);
-            }
-            table.appendChild(tr);
-        }
-        frag.appendChild(table);
-        prodTable = table;
-        selectedRow = 0;
-        document.getElementById('main').appendChild(frag);
-        selected();
+        //var frag = document.createElement('section');
+        //frag.id = 'data';
+        //var table = document.createElement('table');
+        //table.border = 1;
+        //for (var i = 0, entry; entry = resp[i]; ++i) {
+            //var tr = document.createElement('tr');
+            //var keys = Object.keys(entry);
+            //for (var j = 0, key; key = keys[j]; ++j) {
+                //var td = document.createElement('td');
+                //td.innerText = entry[key];
+                //tr.appendChild(td);
+            //}
+            //table.appendChild(tr);
+        //}
+        //frag.appendChild(table);
+        //prodTable = table;
+        //selectedRow = 0;
+        //document.getElementById('main').appendChild(frag);
+        //selected();
     });
 }
 

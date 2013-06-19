@@ -1,10 +1,9 @@
 chrome.app.runtime.onLaunched.addListener(function(launchData) {
-  chrome.app.window.create('window.html', {
-    bounds: {
-      width: 500,
-      height: 600
+    chrome.app.window.create('window.html', {
+        singleton: true,
+        frame: 'chrome'
     },
-    minWidth: 500,
-    minHeight: 600
+    function (win) {
+        win.maximize();
   });
 });
