@@ -1,4 +1,6 @@
 var ecf;
+var selectedRow = 0;
+var prodTable;
 
 document.addEventListener('DOMContentLoaded', function () {
     port = "COM6";
@@ -10,7 +12,104 @@ function bind() {
     document.getElementById('LeituraX').addEventListener('click', leituraX);
     document.getElementById('AbreCupom').addEventListener('click', abreCupom);
     document.getElementById('CancelaCupom').addEventListener('click', cancelaCupom);
+    document.getElementById('Push').addEventListener('click', pushData);
+    document.getElementById('TestWindow').addEventListener('click', testWindow);
+    
+    document.addEventListener("keydown", keyDown, false);
 }
+
+function testWindow() {
+    chrome.app.window.create('window.html', {
+        bounds: {
+            width: 500,
+            height: 600
+        },
+        minWidth: 500,
+        minHeight: 600
+    });
+}
+
+function keyDown(e) {
+    var keyCode = e.keyCode;
+    ///\ 38
+    //\/ 40
+    if (keyCode == 38) {
+        selectedRow--;
+    }
+    else if (keyCode == 40) {
+        selectedRow++;
+    }
+    if (selectedRow < 0) {
+        selectedRow = 0;
+    }
+    if (selectedRow >= prodTable.getElementsByTagName("tr").length) {
+        selectedRow = prodTable.getElementsByTagName("tr").length - 1;
+    }
+    selected();
+}
+
+function selected() {
+    var rows = prodTable.getElementsByTagName("tr");
+    for (var i = 0; i < rows.length; i++) {
+        if (i == selectedRow) {
+            rows[i].style.backgroundColor = "blue";
+        }
+        else {
+            rows[i].style.backgroundColor = "white";
+        }
+    }
+}
+
+function pushData() {
+    request('GET', 'http://localhost:28166/Produtos/JSON', function (lastResponse, xhr) {
+        var resp = JSON.parse(lastResponse);
+
+        if (document.getElementById('data') != null) {
+            document.getElementById('main').removeChild(document.getElementById('data'));
+        }
+        
+        var frag = document.createElement('section');
+        frag.id = 'data';
+        var table = document.createElement('table');
+        table.border = 1;
+        for (var i = 0, entry; entry = resp[i]; ++i) {
+            var tr = document.createElement('tr');
+            var keys = Object.keys(entry);
+            for (var j = 0, key; key = keys[j]; ++j) {
+                var td = document.createElement('td');
+                td.innerText = entry[key];
+                tr.appendChild(td);
+            }
+            table.appendChild(tr);
+        }
+        frag.appendChild(table);
+        prodTable = table;
+        selectedRow = 0;
+        document.getElementById('main').appendChild(frag);
+        selected();
+    });
+}
+
+function request(method, url, callback) {
+    var data = null;
+    var headers = {};
+
+    var xhr = new XMLHttpRequest();
+    xhr.open(method, url, true);
+    xhr.onload = function (e) {
+        callback(xhr.response, this);
+    }.bind(this);
+    xhr.onerror = function (e) {
+        console.log(this, this.status, this.response,
+                    this.getAllResponseHeaders());
+    };
+    xhr.send(data);
+}
+
+
+
+
+//ECF
 
 function write() {
     var buf = new ArrayBuffer(2);
