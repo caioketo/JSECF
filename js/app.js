@@ -1,11 +1,12 @@
 var ecf;
 var selectedRow = 0;
 var prodTable;
-
+var db;
 document.addEventListener('DOMContentLoaded', function () {
     port = "COM6";
     ecf = new ECF();
     bind();
+    db = new DB();
 });
 
 function bind() {
@@ -16,6 +17,16 @@ function bind() {
     document.addEventListener('keydown', keyDown, false);
     ativaMenu();
     document.getElementById('Sair').addEventListener('click', sair);
+    document.getElementById('IndexedDB').addEventListener('click', openDB);
+    document.getElementById('AddProd').addEventListener('click', addProd);
+}
+
+function addProd() {
+    db.addProduto({ Id: 1, Desc: 'Teste' });
+}
+
+function openDB() {
+    db.open();
 }
 
 function sair() {
@@ -88,33 +99,11 @@ function selected() {
 }
 
 function pushData() {
-    request('GET', 'http://localhost:28166/Produtos/JSON', function (lastResponse, xhr) {
-        var resp = JSON.parse(lastResponse);
-        prepareGrid(resp);
-        //if (document.getElementById('data') != null) {
-            //document.getElementById('main').removeChild(document.getElementById('data'));
-        //}
-        
-        //var frag = document.createElement('section');
-        //frag.id = 'data';
-        //var table = document.createElement('table');
-        //table.border = 1;
-        //for (var i = 0, entry; entry = resp[i]; ++i) {
-            //var tr = document.createElement('tr');
-            //var keys = Object.keys(entry);
-            //for (var j = 0, key; key = keys[j]; ++j) {
-                //var td = document.createElement('td');
-                //td.innerText = entry[key];
-                //tr.appendChild(td);
-            //}
-            //table.appendChild(tr);
-        //}
-        //frag.appendChild(table);
-        //prodTable = table;
-        //selectedRow = 0;
-        //document.getElementById('main').appendChild(frag);
-        //selected();
-    });
+    //request('GET', 'http://localhost:28166/Produtos/JSON', function (lastResponse, xhr) {
+        //var resp = JSON.parse(lastResponse);
+        //prepareGrid(resp);
+    //});
+    prepareGrid(db.data);
 }
 
 function request(method, url, callback) {
