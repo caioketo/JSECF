@@ -3,10 +3,10 @@ var selectedRow = 0;
 var prodTable;
 var db;
 document.addEventListener('DOMContentLoaded', function () {
+    db = new DB();
     port = "COM6";
     ecf = new ECF();
     bind();
-    db = new DB();
 });
 
 function bind() {
@@ -14,19 +14,22 @@ function bind() {
     document.getElementById('AbreCupom').addEventListener('click', abreCupom);
     document.getElementById('CancelaCupom').addEventListener('click', cancelaCupom);
     document.getElementById('Push').addEventListener('click', pushData);    
-    document.addEventListener('keydown', keyDown, false);
     ativaMenu();
     document.getElementById('Sair').addEventListener('click', sair);
-    document.getElementById('IndexedDB').addEventListener('click', openDB);
-    document.getElementById('AddProd').addEventListener('click', addProd);
-}
-
-function addProd() {
-    db.addProduto({ Id: 1, Desc: 'Teste' });
-}
-
-function openDB() {
+    document.getElementById('ConsultarProdutos').addEventListener('click', produtos);    
     db.open();
+    prepareGrid();
+}
+
+
+function produtos() {
+    chrome.app.window.create('produtos.html', {
+        singleton: true,
+        frame: 'chrome'
+    },
+    function (win) {
+        win.maximize();
+    });
 }
 
 function sair() {
@@ -36,21 +39,36 @@ function sair() {
 function ativaMenu() {
     var theme = getDemoTheme();
     // Create a jqxMenu
-    $("#jqxMenu").jqxMenu({ width: '600', height: '30px', theme: theme });
+    $("#jqxMenu").jqxMenu({ width: '100%', height: '30px', theme: theme });
     $("#jqxMenu").css('visibility', 'visible');
     $("#jqxMenu").jqxMenu({ showTopLevelArrows: true });
 }
 
-function prepareGrid(data) {
-    var theme = getDemoTheme();
+function refreshGrid() {
     var source =
     {
-        localdata: data,
+        localdata: db.data,
         datatype: "local",
         datafields:
         [
-            { name: 'Id', type: 'number' },
-            { name: 'Desc', type: 'string' }
+            { name: 'id', type: 'number' },
+            { name: 'desc', type: 'string' }
+        ]
+    };
+    var dataAdapter = new $.jqx.dataAdapter(source);
+    $('#jqxgrid').jqxGrid({ source: dataAdapter });
+}
+
+function prepareGrid() {
+    var theme = getDemoTheme();
+    var source =
+    {
+        localdata: db.data,
+        datatype: "local",
+        datafields:
+        [
+            { name: 'id', type: 'number' },
+            { name: 'desc', type: 'string' }
         ]
     };
     var dataAdapter = new $.jqx.dataAdapter(source);
@@ -61,49 +79,22 @@ function prepareGrid(data) {
         source: dataAdapter,
         theme: theme,
         columns: [
-            { text: 'Id', datafield: 'Id', width: 100 },
-            { text: 'Descricao', datafield: 'Desc', width: 100 }
+            { text: 'Id', datafield: 'id', width: 100 },
+            { text: 'Descricao', datafield: 'desc', width: 100 }
         ]
     });
 }
 
-function keyDown(e) {
-    var keyCode = e.keyCode;
-    ///\ 38
-    //\/ 40
-    if (keyCode == 38) {
-        selectedRow--;
-    }
-    else if (keyCode == 40) {
-        selectedRow++;
-    }
-    if (selectedRow < 0) {
-        selectedRow = 0;
-    }
-    if (selectedRow >= prodTable.getElementsByTagName("tr").length) {
-        selectedRow = prodTable.getElementsByTagName("tr").length - 1;
-    }
-    selected();
-}
-
-function selected() {
-    var rows = prodTable.getElementsByTagName("tr");
-    for (var i = 0; i < rows.length; i++) {
-        if (i == selectedRow) {
-            rows[i].style.backgroundColor = "blue";
-        }
-        else {
-            rows[i].style.backgroundColor = "white";
-        }
-    }
-}
 
 function pushData() {
-    //request('GET', 'http://localhost:28166/Produtos/JSON', function (lastResponse, xhr) {
-        //var resp = JSON.parse(lastResponse);
-        //prepareGrid(resp);
-    //});
-    prepareGrid(db.data);
+    request('GET', 'http://localhost:28166/Produtos/JSON', function (lastResponse, xhr) {
+        var resp = JSON.parse(lastResponse);
+        for (var i = 0, entry; entry = resp[i]; ++i) {
+            db.addProduto(entry);
+        }
+
+        db.getAllProdutos(refreshGrid);
+    });
 }
 
 function request(method, url, callback) {
